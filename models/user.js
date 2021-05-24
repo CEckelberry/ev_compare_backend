@@ -57,40 +57,39 @@ class User {
    **/
 
   static async register(
-      { username, password, firstName, lastName, email, isAdmin }) {
+      { username, firstName, lastName, email, googleid, profile_image, isAdmin=false }) {
+        console.log("in user model register")
     const duplicateCheck = await db.query(
-          `SELECT username
+          `SELECT googleid
            FROM users
-           WHERE username = $1`,
-        [username],
+           WHERE googleid = $1`,
+        [googleid],
     );
 
     if (duplicateCheck.rows[0]) {
-      throw new BadRequestError(`Duplicate username: ${username}`);
+      throw new BadRequestError(`Duplicate googleid: ${googleid}`);
     }
-
-    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(
           `INSERT INTO users
            (username,
-            password,
             first_name,
             last_name,
-            email,
+            googleid,
+            profile_image,
             is_admin)
            VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING username, first_name AS "firstName", last_name AS "lastName", email, is_admin AS "isAdmin"`,
+           RETURNING username, first_name AS "firstName", last_name AS "lastName", googleid, is_admin AS "isAdmin"`,
         [
           username,
-          hashedPassword,
           firstName,
           lastName,
-          email,
+          googleid,
+          profile_image,
           isAdmin,
         ],
     );
-
+    console.log("in user model register after result")
     const user = result.rows[0];
 
     return user;
@@ -107,6 +106,7 @@ class User {
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
+                  googleid,
                   is_admin AS "isAdmin"
            FROM users
            ORDER BY username`,
@@ -123,21 +123,23 @@ class User {
    * Throws NotFoundError if user not found.
    **/
 
-  static async get(username) {
+  static async get(googleid) {
+    console.log("in get(googleid)")
     const userRes = await db.query(
-          `SELECT username,
+          `SELECT googleid,
+                  username,
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
                   is_admin AS "isAdmin"
            FROM users
-           WHERE username = $1`,
-        [username],
+           WHERE googleid = $1`,
+        [googleid],
     );
 
     const user = userRes.rows[0];
-
-    if (!user) throw new NotFoundError(`No user: ${username}`);
+    console.log(`user result: ${user}`)
+    if (!user) return null;
 
     return user;
   }

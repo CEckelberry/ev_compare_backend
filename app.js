@@ -4,6 +4,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const cookieSession = require('cookie-session');
 
 const { NotFoundError } = require("./expressError");
 
@@ -11,10 +12,16 @@ const { authenticateJWT } = require("./middleware/auth");
 const authRoutes = require("./routes/auth");
 const companiesRoutes = require("./routes/companies");
 const usersRoutes = require("./routes/users");
+const SESSION = require("./config")
 
 const morgan = require("morgan");
 
 const app = express();
+
+app.use(cookieSession({
+  maxAge: 24 * 60 * 60 * 1000,
+  keys:[SESSION]
+}))
 
 app.use(cors());
 app.use(express.json());

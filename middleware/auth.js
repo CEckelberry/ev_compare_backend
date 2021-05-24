@@ -7,21 +7,51 @@ const { SECRET_KEY, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_ID } = require("../confi
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const { UnauthorizedError } = require("../expressError");
+const User = require("../models/user");
 
+
+console.log(`SECRET_KEY: ${SECRET_KEY}`)
+
+passport.serializeUser((user, done) => {
+  console.log("in serializer")
+  done(null, user.googleid||user.id);
+});
+
+passport.deserializeUser((googleid, done) => {
+  User.get(googleid), function (err, user) {
+      console.log("in deserializer")
+      done(null, user);
+  };
+});
 
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
   callbackURL: "/auth/google/redirect"
 },
-function(accessToken, refreshToken, profile, cb) {
-  User.findOrCreate({ googleId: profile.id }, function (err, user) {
+function(accessToken, refreshToken, profile, done) {
+  
+    User.get(profile.id).then((currentUser) => {
+      console.log(`currentUser: ${currentUser}`)
+    
+    if(currentUser !== null){
+      console.log("in currentUser if")
+      done(null, currentUser)
+    }
 
-    console.log(accessToken)
-    return cb(err, user);
-  });
+    else{
+      User.register({username: profile.displayName, firstName: profile.name.givenName, lastName: profile.name.familyName, googleid: profile.id, profile_image: profile.photos[0].value})
+      .then((newUser) => {
+          console.log("in User.register else")
+          console.log(accessToken, refreshToken)
+          done(null, newUser) 
+        })
+
+  console.log(profile)
+      }
 }
-));
+)}));
+
 
 
 /** Middleware: Authenticate user.

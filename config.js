@@ -5,8 +5,9 @@
 require("dotenv").config();
 require("colors");
 
-const GOOGLE_AUTH_SECRET = process.env.GOOGLE_AUTH_SECRET;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const SESSION = process.env.SESSION;
 
 const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 
@@ -42,6 +43,7 @@ module.exports = {
   PORT,
   BCRYPT_WORK_FACTOR,
   getDatabaseUri,
-  GOOGLE_AUTH_SECRET,
-  GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_CLIENT_ID,
+  SESSION
 };

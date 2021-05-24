@@ -1,12 +1,10 @@
-INSERT INTO users (username, password, email, phone_number, profile_image, is_admin)
+INSERT INTO users (username, email, phone_number, profile_image, is_admin)
 VALUES (1,
-        'testuser',
         'testuser',
         'test@test.com',
         '555-555-5555',
         FALSE),
        (2,
-        'testadmin',
         'testadmin',
         'testadmin@test.com',
         '555-555-5555',

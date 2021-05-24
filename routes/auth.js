@@ -64,14 +64,22 @@ const passportSetup = require('../middleware/auth')
 //   }
 // });
 
-router.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile'] }));
+router.get('/google',
+  passport.authenticate('google', { scope: ['profile'], session: false }));
 
-router.get('/auth/google/redirect', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  function(req, res) {
+router.get('/google/redirect', 
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  function(req, res, next) {
     // Successful authentication, redirect home.
-    res.redirect('/');
+    try {
+    console.log(req)
+    let user = req.user
+    const token = createToken(user);
+    console.log("token issued")
+    return res.json({ token });
+  } catch (err){
+    return next(err);
+  }
   });
 
 

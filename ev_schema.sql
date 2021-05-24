@@ -24,10 +24,12 @@ CREATE TABLE users
 (
  id        serial NOT NULL,
  username      text NOT NULL,
- password      text NOT NULL,
- email         text NOT NULL,
- phone_number  text NOT NULL,
- profile_image text NOT NULL,
+ email         text,
+ googleid      text,
+ first_name    text,
+ last_name     text,
+ phone_number  text,
+ profile_image text,
  is_admin boolean NOT NULL DEFAULT FALSE,
  CONSTRAINT PK_users PRIMARY KEY ( id )
 );
