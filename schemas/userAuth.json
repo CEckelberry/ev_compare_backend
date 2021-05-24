@@ -3,16 +3,12 @@
   "$id": "http://example.com/userAuth.json",
   "type": "object",
   "properties": {
-    "username": {
-      "type": "string"
-    },
-    "password": {
+    "googleid": {
       "type": "string"
     }
   },
   "additionalProperties": false,
   "required": [
-    "username",
-    "password"
+    "googleid"
   ]
 }

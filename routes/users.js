@@ -67,9 +67,10 @@ router.get("/", async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.get("/:username", async function (req, res, next) {
+router.get("/:googleid", async function (req, res, next) {
   try {
-    const user = await User.get(req.params.username);
+    console.log(`/users/:googleid req: ${req.params.googleid} , res:${res}`)
+    const user = await User.get(req.params.googleid);
     return res.json({ user });
   } catch (err) {
     return next(err);

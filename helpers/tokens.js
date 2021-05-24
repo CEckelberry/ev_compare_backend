@@ -8,7 +8,7 @@ function createToken(user) {
       "createToken passed user without isAdmin property");
 
   let payload = {
-    username: user.username,
+    googleid: user.googleid,
     isAdmin: user.isAdmin || false,
   };
 

@@ -21,32 +21,27 @@ class User {
    * Throws UnauthorizedError is user not found or wrong password.
    **/
 
-  static async authenticate(username, password) {
+  static async authenticate(googleid) {
     // try to find the user first
     const result = await db.query(
-          `SELECT username,
-                  password,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
-        [username],
+          `SELECT googleid,
+          username,
+          first_name AS "firstName",
+          last_name AS "lastName",
+          email,
+          is_admin AS "isAdmin"
+          FROM users
+          WHERE googleid = $1`,
+          [googleid],
     );
-
+    console.log(`in authenticate (googleid)`)
     const user = result.rows[0];
-
+    console.log(`user: ${user}, googleid: ${googleid}`)
     if (user) {
-      // compare hashed password to a new hash from password
-      const isValid = await bcrypt.compare(password, user.password);
-      if (isValid === true) {
-        delete user.password;
-        return user;
-      }
+      return user
     }
 
-    throw new UnauthorizedError("Invalid username/password");
+    throw new UnauthorizedError("Invalid user");
   }
 
   /** Register user with data.
@@ -131,6 +126,7 @@ class User {
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
+                  profile_image,
                   is_admin AS "isAdmin"
            FROM users
            WHERE googleid = $1`,

@@ -13,6 +13,7 @@ const userRegisterSchema = require("../schemas/userRegister.json");
 const { BadRequestError } = require("../expressError");
 const passport = require("passport");
 const passportSetup = require('../middleware/auth')
+const url = require('url');   
 
 /** POST /auth/token:  { username, password } => { token }
  *
@@ -21,22 +22,23 @@ const passportSetup = require('../middleware/auth')
  * Authorization required: none
  */
 
-// router.post("/token", async function (req, res, next) {
-//   try {
-//     const validator = jsonschema.validate(req.body, userAuthSchema);
-//     if (!validator.valid) {
-//       const errs = validator.errors.map(e => e.stack);
-//       throw new BadRequestError(errs);
-//     }
+router.post("/token", async function (req, res, next) {
+  try {
+    const validator = jsonschema.validate(req.body, userAuthSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
 
-//     const { username, password } = req.body;
-//     const user = await User.authenticate(username, password);
-//     const token = createToken(user);
-//     return res.json({ token });
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
+    const { googleid } = req.body;
+    console.log(`in /token (${googleid})`)
+    const user = await User.authenticate(googleid);
+    const token = createToken(user);
+    return res.json({ token });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 
 // /** POST /auth/register:   { user } => { token }
@@ -72,11 +74,17 @@ router.get('/google/redirect',
   function(req, res, next) {
     // Successful authentication, redirect home.
     try {
-    console.log(req)
+    // console.log(req)
     let user = req.user
+    console.log(user)
     const token = createToken(user);
     console.log("token issued")
-    return res.json({ token });
+    return res.redirect(url.format({
+      pathname: "http://localhost:3000/finishlogin/",
+      query: {
+        "googleid": user.googleid,
+      }
+    }));
   } catch (err){
     return next(err);
   }
