@@ -2,7 +2,7 @@ CREATE TABLE favorites
 (
  id        serial NOT NULL,
  vehicle_id integer NOT NULL,
- user_id    integer NOT NULL,
+ googleid    text,
  CONSTRAINT PK_favorites PRIMARY KEY ( id )
 );
 
@@ -13,7 +13,7 @@ CREATE INDEX fkIdx_50 ON favorites
 
 CREATE INDEX fkIdx_53 ON favorites
 (
- user_id
+ googleid
 );
 
 
@@ -25,7 +25,7 @@ CREATE TABLE users
  id        serial NOT NULL,
  username      text NOT NULL,
  email         text,
- googleid      text,
+ googleid      text UNIQUE,
  first_name    text,
  last_name     text,
  phone_number  text,
@@ -48,6 +48,7 @@ CREATE TABLE vehicles
  body_type     text NOT NULL,
  chargeport    text NOT NULL,
  year          integer NOT NULL,
+ car_image     text,
  CONSTRAINT PK_vehicles PRIMARY KEY ( id )
 );
 
@@ -81,10 +82,10 @@ CREATE INDEX fkIdx_76 ON versions
 
 -- favorites 
 ALTER TABLE favorites ADD
-    CONSTRAINT FK_49 FOREIGN KEY ( vehicle_id ) REFERENCES versions ( id );
+    CONSTRAINT FK_49 FOREIGN KEY ( vehicle_id ) REFERENCES vehicles ( id );
     
 ALTER TABLE favorites ADD
-    CONSTRAINT FK_52 FOREIGN KEY ( user_id ) REFERENCES users ( id );
+    CONSTRAINT FK_52 FOREIGN KEY ( googleid ) REFERENCES users ( googleid );
 
 -- versions
 ALTER TABLE versions ADD

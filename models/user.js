@@ -140,6 +140,7 @@ class User {
     return user;
   }
 
+
   /** Update user data with `data`.
    *
    * This is a "partial update" --- it's fine if data doesn't contain
@@ -190,19 +191,116 @@ class User {
 
   /** Delete given user from database; returns undefined. */
 
-  static async remove(username) {
+  static async remove(googleid) {
     let result = await db.query(
           `DELETE
            FROM users
-           WHERE username = $1
-           RETURNING username`,
-        [username],
+           WHERE googleid = $1
+           RETURNING googleid`,
+        [googleid],
     );
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+    
+  }
+
+
+  /** FAVORITES SECTION
+   * 
+   * GET all favorites associated with user
+   */
+  static async getFavs(googleid) {
+    console.log("in getFavs(googleid)")
+    const favRes = await db.query(
+          `SELECT usr.googleid,
+                  usr.username,
+                  usr.first_name AS "firstName",
+                  usr.last_name AS "lastName",
+                  usr.email,
+                  usr.profile_image,
+                  usr.is_admin AS "isAdmin",
+                  fav.vehicle_id
+           FROM users usr
+              LEFT JOIN favorites as fav ON fav.googleid = usr.googleid
+           WHERE usr.googleid = $1`,
+        [googleid],
+    );
+
+    const favorites = favRes.rows;
+    let favoriteids = [];
+    
+    
+    if (!favorites) return null;
+
+    for(let i = 0; i < favorites.length; i++){
+      favoriteids.push(favorites[i].vehicle_id)
+    }
+
+
+
+    let typey = typeof(favoriteids);
+
+    console.log(`favorites result: ${favoriteids}`)
+    console.log(`favorites result type: ${typey}`)
+
+    return favoriteids;
+  }
+
+
+
+  static async removeFav(googleid, vehicle_id ) {
+    let result = await db.query(
+          `DELETE
+           FROM favorites
+           WHERE googleid = $1
+           AND vehicle_id = $2
+           RETURNING googleid, vehicle_id`,
+        [googleid, vehicle_id],
+    );
+    const userFav = result.rows[0];
+
+    if (!userFav) throw new NotFoundError(`No user + favorite found: ${googleid}  ${vehicle_id}`);
+  }
+
+
+  static async addToFav(googleid, vehicle_id) {
+    const duplicateCheck = await db.query(
+      `SELECT googleid
+       FROM favorites
+       WHERE googleid = $1
+       AND vehicle_id = $2`,
+    [googleid, vehicle_id],
+    );
+
+    if (duplicateCheck.rows[0]) {
+      throw new BadRequestError(`Duplicate googleid + vehicle_id: ${googleid}`);
+    }
+
+    const preCheck = await db.query(
+          `SELECT id
+           FROM vehicles
+           WHERE id = $1`, [vehicle_id]);
+    const ev = preCheck.rows[0];
+
+    if (!ev) throw new NotFoundError(`No ev: ${vehicle_id}`);
+
+    const preCheck2 = await db.query(
+          `SELECT googleid
+           FROM users
+           WHERE googleid = $1`, [googleid]);
+    const user = preCheck2.rows[0];
+
+    if (!user) throw new NotFoundError(`No google_id: ${googleid}`);
+
+    await db.query(
+          `INSERT INTO favorites (vehicle_id, googleid)
+           VALUES ($1, $2)`,
+        [vehicle_id, googleid]);
   }
 }
+
+
 
 
 module.exports = User;

@@ -7,7 +7,7 @@ const express = require("express");
 
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
-const Company = require("../models/company");
+const EVS = require("../models/ev");
 
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
@@ -52,8 +52,12 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
-    return res.json({ companies });
+    const q = req.query;
+    const p = req.params.make;
+    console.log('req.query /evs get:', q[0])
+    console.log('req.params.make /evs get:', p)
+    const evs = await EVS.findAll(q[0]);
+    return res.json({ evs });
   } catch (err) {
     return next(err);
   }

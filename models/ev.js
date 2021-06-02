@@ -6,7 +6,7 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
-class Company {
+class EVS {
   /** Create a company (from data), update db, return new company data.
    *
    * data should be { handle, name, description, numEmployees, logoUrl }
@@ -49,16 +49,67 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
-    return companiesRes.rows;
+  static async findAll(make=null, model=null, price=null, range=null, body_type=null) {
+    
+    let query2 = `SELECT veh.id,
+                  veh.make,
+                  veh.model,
+                  veh.safety_rating,
+                  veh.length,
+                  veh.width,
+                  veh.height,
+                  veh.body_type,
+                  veh.chargeport,
+                  veh.year,
+                  veh.car_image,
+                  v.price,
+                  v.range,
+                  v.battery_capacity
+           FROM vehicles veh
+              LEFT JOIN versions as v ON v.model_id = veh.id`;
+    let whereExpressions = [];
+    let queryValues = [];
+
+
+    if (make) {
+      queryValues.push(`%${make}%`);
+      whereExpressions.push(`veh.make ILIKE $${queryValues.length}`);
+    }
+
+    if (model) {
+      queryValues.push(`%${model}%`);
+      whereExpressions.push(`veh.model ILIKE $${queryValues.length}`);
+    }
+    if (price) {
+      queryValues.push(`%${price}%`);
+      whereExpressions.push(`v.price ILIKE $${queryValues.length}`);
+    }
+    if (range) {
+      queryValues.push(`%${range}%`);
+      whereExpressions.push(`v.range ILIKE $${queryValues.length}`);
+    }
+    if (body_type) {
+      queryValues.push(`%${body_type}%`);
+      whereExpressions.push(`veh.body_type ILIKE $${queryValues.length}`);
+    }
+
+    if (whereExpressions.length > 0) {
+      query2 += " WHERE " + whereExpressions.join(" OR ");
+    }
+
+    console.log('make: ', make)
+    console.log('model: ', model)
+    console.log('price: ', price)
+    console.log('range: ', range)
+    console.log('body_type: ', body_type)
+    console.log('whereExpressions:', whereExpressions)
+    console.log('queryValues:', queryValues)
+
+    query2 += " ORDER BY make";
+    console.log('query2:', query2)
+    // console.log('db.query:', await db.query(query2, queryValues))
+    const EVRes = await db.query(query2, queryValues);
+    return EVRes.rows;
   }
 
   /** Given a company handle, return data about company.
@@ -143,4 +194,4 @@ class Company {
 }
 
 
-module.exports = Company;
+module.exports = EVS;

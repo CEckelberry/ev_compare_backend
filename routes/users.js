@@ -78,6 +78,7 @@ router.get("/:googleid", async function (req, res, next) {
 });
 
 
+
 /** PATCH /[username] { user } => { user }
  *
  * Data can include:
@@ -109,14 +110,53 @@ router.patch("/:username", async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.delete("/:username", async function (req, res, next) {
+router.delete("/:googleid", async function (req, res, next) {
   try {
-    await User.remove(req.params.username);
+    await User.remove(req.params.googleid);
     return res.json({ deleted: req.params.username });
   } catch (err) {
     return next(err);
   }
 });
 
+
+/** POST /[username]/jobs/[id]  { state } => { application }
+ *
+ * Returns {"applied": jobId}
+ *
+ * Authorization required: admin or same-user-as-:username
+ * */
+ router.get("/:googleid/favorites", async function (req, res, next) {
+  try {
+    console.log(`/users/:googleid/favorites req: ${req.params.googleid} , res:${res}`)
+    const favs = await User.getFavs(req.params.googleid);
+    console.log(`favs: ${Array.from(favs)}`)
+    return res.send(favs);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+
+ router.post("/:googleid/evs/:id", async function (req, res, next) {
+  try {
+    console.log("in .post(/:googleid/evs/:id")
+    const vehicle_id = +req.params.id;
+    await User.addToFav(req.params.googleid, vehicle_id);
+    return res.json({ added: vehicle_id });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.delete("/:googleid/evs/:id", async function (req, res, next) {
+  try {
+    const vehicle_id = +req.params.id;
+    await User.removeFav(req.params.googleid, vehicle_id);
+    return res.json({ deleted: req.params.googleid + vehicle_id });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = router;
