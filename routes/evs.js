@@ -53,10 +53,12 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 router.get("/", async function (req, res, next) {
   try {
     const q = req.query;
-    const p = req.params.make;
-    console.log('req.query /evs get:', q[0])
-    console.log('req.params.make /evs get:', p)
-    const evs = await EVS.findAll(q[0]);
+    console.log('req.query /evs get:', q.make)
+    let make = q.make;
+    let model= q.model;
+    let body_type = q.body_type;
+
+    const evs = await EVS.findAll(make, model, body_type);
     return res.json({ evs });
   } catch (err) {
     return next(err);
@@ -71,10 +73,11 @@ router.get("/", async function (req, res, next) {
  * Authorization required: none
  */
 
-router.get("/:handle", async function (req, res, next) {
+router.get("/:id", async function (req, res, next) {
   try {
-    const company = await Company.get(req.params.handle);
-    return res.json({ company });
+    console.log('req.params.id:', req.params.id)
+    const ev = await EVS.get(req.params.id);
+    return res.json({ ev });
   } catch (err) {
     return next(err);
   }

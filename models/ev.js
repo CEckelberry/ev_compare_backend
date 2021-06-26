@@ -49,9 +49,9 @@ class EVS {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll(make=null, model=null, price=null, range=null, body_type=null) {
+  static async findAll(make=null, model=null, body_type=null, price=null, range=null) {
     
-    let query2 = `SELECT veh.id,
+    let query2 = `SELECT DISTINCT ON (veh.id) veh.id,
                   veh.make,
                   veh.model,
                   veh.safety_rating,
@@ -66,7 +66,7 @@ class EVS {
                   v.range,
                   v.battery_capacity
            FROM vehicles veh
-              LEFT JOIN versions as v ON v.model_id = veh.id`;
+              RIGHT JOIN versions as v ON v.model_id = veh.id`;
     let whereExpressions = [];
     let queryValues = [];
 
@@ -80,17 +80,19 @@ class EVS {
       queryValues.push(`%${model}%`);
       whereExpressions.push(`veh.model ILIKE $${queryValues.length}`);
     }
+
+    if (body_type) {
+      queryValues.push(`%${body_type}%`);
+      whereExpressions.push(`veh.body_type ILIKE $${queryValues.length}`);
+    }
+
     if (price) {
       queryValues.push(`%${price}%`);
-      whereExpressions.push(`v.price ILIKE $${queryValues.length}`);
+      whereExpressions.push(`v.price BETWEEN $${queryValues.length}`);
     }
     if (range) {
       queryValues.push(`%${range}%`);
       whereExpressions.push(`v.range ILIKE $${queryValues.length}`);
-    }
-    if (body_type) {
-      queryValues.push(`%${body_type}%`);
-      whereExpressions.push(`veh.body_type ILIKE $${queryValues.length}`);
     }
 
     if (whereExpressions.length > 0) {
@@ -105,7 +107,7 @@ class EVS {
     console.log('whereExpressions:', whereExpressions)
     console.log('queryValues:', queryValues)
 
-    query2 += " ORDER BY make";
+    query2 += " GROUP BY veh.id, v.price, v.range, v.battery_capacity";
     console.log('query2:', query2)
     // console.log('db.query:', await db.query(query2, queryValues))
     const EVRes = await db.query(query2, queryValues);
@@ -120,22 +122,46 @@ class EVS {
    * Throws NotFoundError if not found.
    **/
 
-  static async get(handle) {
-    const companyRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           WHERE handle = $1`,
-        [handle]);
+  static async get(id) {
+    const evRes = await db.query(
+          `SELECT veh.id,
+                  veh.make,
+                  veh.model,
+                  veh.safety_rating,
+                  veh.length,
+                  veh.width,
+                  veh.height,
+                  veh.body_type,
+                  veh.chargeport,
+                  veh.year,
+                  veh.car_image,
+                  v.id,
+                  v.version_name,
+                  v.price,
+                  v.range,
+                  v.battery_capacity,
+                  v.efficiency,
+                  v.seats,
+                  v.weight,
+                  v.charge_time,
+                  v.available_now,
+                  v.acceleration,
+                  v.power,
+                  v.torque,
+                  v.drive,
+                  v.towing_capacity
+          FROM vehicles veh
+              LEFT JOIN versions as v ON v.model_id = veh.id
+          WHERE veh.id = $1
+          ORDER BY v.range`,
+                [id]);
 
-    const company = companyRes.rows[0];
+    const ev = evRes.rows;
+    console.log(ev)
 
-    if (!company) throw new NotFoundError(`No company: ${handle}`);
+    if (!ev) throw new NotFoundError(`No ev: ${id}`);
 
-    return company;
+    return ev;
   }
 
   /** Update company data with `data`.
